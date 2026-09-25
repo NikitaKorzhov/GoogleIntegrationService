@@ -1,4 +1,7 @@
+using DotNetEnv;
 using GoogleIntegrationService.Infrastructure.Google;
+
+Env.TraversePath().Load();
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -53,23 +53,33 @@ Flow: `Controller → MediatR Request → Handler → IYouTubeUserService → Yo
 
 ## Configuration
 
-`appsettings.json`:
+Secrets are kept out of the repo and supplied via a `.env` file at the project root.
 
-```json
-{
-  "Kestrel": {
-    "Certificates": {
-      "Default": { "Path": "certs/devcert.pfx", "Password": "devcert" }
-    }
-  },
-  "Google": {
-    "ApplicationName": "GoogleIntegrationService"
-  }
-}
-```
+1. Copy the template:
+   ```bash
+   cp .env.example .env
+   ```
+2. Fill in `.env`:
+   ```
+   Kestrel__Certificates__Default__Password=devcert
+   Google__ApplicationName=GoogleIntegrationService
+   ```
 
-- `Google:ApplicationName` — application name passed to the YouTube API.
-- `Kestrel:Certificates:Default` — dev certificate for HTTPS (`certs/devcert.pfx`).
+`.env` is loaded automatically on startup via [DotNetEnv](https://github.com/tonerdo/dotnet-env)
+(`Env.Load()` in `web/Program.cs`), applied to process environment variables **before** the
+configuration is built. Keys use the standard ASP.NET Core `__` section separator, so
+`Kestrel__Certificates__Default__Password` maps to `Kestrel:Certificates:Default:Password` and
+overrides the value from `appsettings.json`.
+
+- `Kestrel:Certificates:Default:Password` — password for the dev HTTPS certificate
+  (`certs/devcert.pfx`). **Secret — set only via `.env`.**
+- `Google:ApplicationName` — application name passed to the YouTube API. Not sensitive, but
+  configurable the same way; falls back to `"GoogleIntegrationService"` if unset.
+
+`.env` is git-ignored — never commit it. `.env.example` documents the required keys with
+placeholder values and is safe to commit.
+
+`appsettings.json` still defines the non-secret parts of the config (e.g. the certificate `Path`).
 
 ---
 

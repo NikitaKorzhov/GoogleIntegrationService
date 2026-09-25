@@ -28,11 +28,16 @@ coverage/
 .DS_Store
 Thumbs.db
 
+# ─── Secrets ───
+# Real values live in .env (never commit). .env.example documents the keys.
+.env
+
 # ─────────────────────────────────────────────────────────────────────────────
 # NOTE: the following are intentionally NOT ignored — the project needs them
 # to build and run after a fresh clone:
-#   certs/devcert.pfx   → referenced by appsettings.json (Kestrel HTTPS)
-#   appsettings*.json   → app configuration (no real secrets)
+#   certs/devcert.pfx   → referenced by appsettings.json (Kestrel HTTPS);
+#                          its password now lives in .env, not in the repo
+#   appsettings*.json   → app configuration (no secrets)
 #   Properties/launchSettings.json → defines the 5269 / 7267 ports
 #
 # If you prefer NOT to commit the dev certificate, uncomment the line below and
