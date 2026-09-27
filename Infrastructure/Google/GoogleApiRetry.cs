@@ -1,8 +1,8 @@
 namespace GoogleIntegrationService.Infrastructure.Google
 {
     /// <summary>
-    /// Обгортка для викликів Google API: у разі помилки повторює запит
-    /// після паузи (за замовчуванням 2 секунди).
+    /// Wrapper for Google API calls: on failure, retries the request
+    /// after a pause (2 seconds by default).
     /// </summary>
     public static class GoogleApiRetry
     {
@@ -23,7 +23,7 @@ namespace GoogleIntegrationService.Infrastructure.Google
                 }
                 catch when (attempt < maxAttempts && !cancellationToken.IsCancellationRequested)
                 {
-                    // Помилка запиту — чекаємо й пробуємо ще раз.
+                    // Request failed — wait and try again.
                     await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
                 }
             }

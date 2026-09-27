@@ -4,13 +4,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 
-namespace GoogleIntegrationService.Web.Extensions; // Замініть на простір імен вашого проєкту
+namespace GoogleIntegrationService.Web.Extensions; // Replace with your project's namespace
 
 public static class AuthenticationExtensions
 {
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
-        // Отримуємо конфігурацію всередині методу
+        // Read the configuration inside the method
         var jwtSettings = configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JwtSettings:SecretKey is not configured.");
 

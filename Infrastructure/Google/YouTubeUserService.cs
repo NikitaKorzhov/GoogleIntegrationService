@@ -8,8 +8,8 @@ using GoogleIntegrationService.Application;
 namespace GoogleIntegrationService.Infrastructure.Google
 {
     /// <summary>
-    /// Працює від імені користувача за OAuth access-токеном, який приходить із фронтенду.
-    /// Не залежить від серверної авторизації (singleton YouTubeService).
+    /// Operates on behalf of the user using the OAuth access token received from the frontend.
+    /// Does not depend on server-side authorization (singleton YouTubeService).
     /// </summary>
     public interface IYouTubeUserService
     {
@@ -48,7 +48,7 @@ namespace GoogleIntegrationService.Infrastructure.Google
             var liked = new List<LikedVideoDto>();
             string? pageToken = null;
 
-            // YouTube повертає максимум 50 елементів на сторінку — пагінуємо, доки є NextPageToken.
+            // YouTube returns a maximum of 50 items per page — paginate while there's a NextPageToken.
             do
             {
                 var request = youtube.PlaylistItems.List("snippet,contentDetails");
@@ -77,7 +77,7 @@ namespace GoogleIntegrationService.Infrastructure.Google
                         Description: snippet?.Description,
                         ThumbnailUrl: thumbnail,
                         PublishedAt: snippet?.PublishedAtDateTimeOffset,
-                        Duration: null, // duration треба брати окремо, якщо потрібно
+                        Duration: null, // duration needs to be fetched separately if needed
                         Url: $"https://www.youtube.com/watch?v={videoId}"
                     ));
                 }
@@ -89,7 +89,7 @@ namespace GoogleIntegrationService.Infrastructure.Google
             return liked;
         }
 
-        /// <summary>Приймає id каналу і повертає повну інформацію про нього.</summary>
+        /// <summary>Accepts a channel id and returns full information about it.</summary>
         public async Task<ChannelInfoDto?> GetChannelInfoAsync(
             string accessToken,
             string channelId,
@@ -113,8 +113,8 @@ namespace GoogleIntegrationService.Infrastructure.Google
         }
 
         /// <summary>
-        /// Пробігається по лайкнутих відео й групує їх за каналами,
-        /// додаючи частку (percent) кожного каналу від усіх лайків.
+        /// Walks through liked videos and groups them by channel,
+        /// adding each channel's share (percent) of all the likes.
         /// </summary>
         public async Task<IReadOnlyList<ChannelLikesGroupDto>> GetLikedVideosGroupedByChannelAsync(
             string accessToken,
@@ -128,7 +128,7 @@ namespace GoogleIntegrationService.Infrastructure.Google
 
             using var youtube = BuildService(accessToken);
 
-            // Дотягуємо опис/назву каналів одним батчем (до 50 id за запит).
+            // Fetch channel descriptions/titles in one batch (up to 50 ids per request).
             var channelIds = liked
                 .Select(v => v.ChannelId)
                 .Where(id => !string.IsNullOrEmpty(id))

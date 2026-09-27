@@ -4,8 +4,11 @@ ASP.NET Core (.NET 10) Web API that works with the **YouTube Data API v3** on be
 The service accepts an OAuth access token **from the frontend** and returns the user's liked
 videos grouped by channel, as well as full information about a single channel.
 
-Authorization is **not stored on the server** — the app has no OAuth flow of its own and does not
-open a browser on startup. Every call to Google is performed with the token supplied by the client.
+The YouTube endpoints don't store authorization on the server — they just perform calls with the
+access token supplied by the client. The app also has its own server-side **Sign in with Google**
+flow (`/api/auth/google-login`) for cases where you want the backend to run the OAuth handshake
+and issue tokens itself; see [Google OAuth credentials](#google-oauth-credentials) below for how to
+set it up.
 
 ---
 
@@ -63,6 +66,8 @@ Secrets are kept out of the repo and supplied via a `.env` file at the project r
    ```
    Kestrel__Certificates__Default__Password=devcert
    Google__ApplicationName=GoogleIntegrationService
+   Authentication__Google__ClientId=your-client-id.apps.googleusercontent.com
+   Authentication__Google__ClientSecret=your-client-secret
    ```
 
 `.env` is loaded automatically on startup via [DotNetEnv](https://github.com/tonerdo/dotnet-env)
@@ -75,11 +80,43 @@ overrides the value from `appsettings.json`.
   (`certs/devcert.pfx`). **Secret — set only via `.env`.**
 - `Google:ApplicationName` — application name passed to the YouTube API. Not sensitive, but
   configurable the same way; falls back to `"GoogleIntegrationService"` if unset.
+- `Authentication:Google:ClientId` / `Authentication:Google:ClientSecret` — OAuth 2.0 credentials
+  for the "Sign in with Google" flow. **Secret — set only via `.env`.** See below for how to obtain
+  them.
 
 `.env` is git-ignored — never commit it. `.env.example` documents the required keys with
 placeholder values and is safe to commit.
 
 `appsettings.json` still defines the non-secret parts of the config (e.g. the certificate `Path`).
+
+### Google OAuth credentials
+
+`Authentication:Google:ClientId` / `ClientSecret` (used by `Web/Extensions/GoogleAuthExtensions.cs`)
+are **OAuth 2.0 client credentials**, not a plain API key — a Google API key (`AIza...`) cannot be
+used here; it authenticates plain API calls, not an OAuth sign-in flow.
+
+To get them:
+
+1. Open the [Google Cloud Console](https://console.cloud.google.com/) and select or create a project.
+2. Go to **APIs & Services → OAuth consent screen** and configure it (External user type is fine
+   for local development; add your own Google account as a test user while the app is unpublished).
+3. Go to **APIs & Services → Library** and enable **YouTube Data API v3** (required for the
+   `youtube.readonly` scope requested during login).
+4. Go to **APIs & Services → Credentials → Create Credentials → OAuth client ID**.
+   - Application type: **Web application**.
+   - Under **Authorized redirect URIs**, add the callback path that `AddGoogle()` listens on
+     (`/signin-google`), for every base URL you'll run the app on, e.g.:
+     ```
+     https://localhost:7267/signin-google
+     http://localhost:5269/signin-google
+     ```
+5. Copy the generated **Client ID** and **Client secret** into `.env`:
+   ```
+   Authentication__Google__ClientId=xxxxxxxx.apps.googleusercontent.com
+   Authentication__Google__ClientSecret=GOCSPX-xxxxxxxxxxxxxxxxxxxxxxxx
+   ```
+
+Then sign in by opening `https://localhost:7267/api/auth/google-login` in a browser.
 
 ---
 

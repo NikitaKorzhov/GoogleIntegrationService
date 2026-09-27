@@ -1,6 +1,6 @@
 namespace GoogleIntegrationService.Application
 {
-    /// <summary>Повна інформація про канал.</summary>
+    /// <summary>Full information about a channel.</summary>
     public record ChannelInfoDto(
         string? Id,
         string? Title,
@@ -14,12 +14,12 @@ namespace GoogleIntegrationService.Application
         ulong? ViewCount,
         string? Url);
 
-    /// <summary>Коротке посилання на відео всередині групи каналу.</summary>
+    /// <summary>A short reference to a video within a channel's group.</summary>
     public record LikedVideoRefDto(
         string? Name,
         string? Url);
 
-    /// <summary>Група лайкнутих відео одного каналу з часткою від усіх лайків.</summary>
+    /// <summary>A group of liked videos from a single channel with its share of all likes.</summary>
     public record ChannelLikesGroupDto(
         string? ChannelName,
         string? ChannelId,

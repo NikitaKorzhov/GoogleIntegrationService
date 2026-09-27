@@ -15,8 +15,8 @@ public class YouTubeController : ControllerBase
     }
 
     /// <summary>
-    /// Приймає OAuth access-токен користувача з фронтенду й повертає лайкнуті відео,
-    /// згруповані за каналами, з часткою кожного каналу від усіх лайків.
+    /// Accepts the user's OAuth access token from the frontend and returns liked
+    /// videos grouped by channel, with each channel's share of all the likes.
     /// </summary>
     [HttpPost("liked")]
     public async Task<ActionResult<IReadOnlyList<ChannelLikesGroupDto>>> Liked([FromBody] TokenReqDTO body)
@@ -29,8 +29,8 @@ public class YouTubeController : ControllerBase
     }
 
     /// <summary>
-    /// Приймає id каналу (у маршруті) та OAuth-токен (у тілі) і повертає
-    /// повну інформацію про канал.
+    /// Accepts a channel id (in the route) and an OAuth token (in the body) and
+    /// returns full information about the channel.
     /// </summary>
     [HttpPost("channel/{channelId}")]
     public async Task<ActionResult<ChannelInfoDto>> Channel(string channelId, [FromBody] TokenReqDTO body)
