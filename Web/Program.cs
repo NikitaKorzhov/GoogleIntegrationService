@@ -1,8 +1,10 @@
 using System.Text;
 using DotNetEnv;
+using GoogleIntegrationService.Infrastructure.Data;
 using GoogleIntegrationService.Infrastructure.Google;
 using GoogleIntegrationService.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using GoogleIntegrationService.Web.Extensions;
 
@@ -24,6 +26,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("AppDb")));
+
 builder.Services.AddSingleton<IYouTubeUserService, YouTubeUserService>();
 builder.Services.AddMediatR(cfg =>
 {
@@ -35,6 +40,12 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+}
+
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();

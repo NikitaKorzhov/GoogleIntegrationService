@@ -32,6 +32,11 @@ Thumbs.db
 # Real values live in .env (never commit). .env.example documents the keys.
 .env
 
+# ─── Local SQLite database (EF Core) ───
+*.db
+*.db-shm
+*.db-wal
+
 # ─────────────────────────────────────────────────────────────────────────────
 # NOTE: the following are intentionally NOT ignored — the project needs them
 # to build and run after a fresh clone:
