@@ -1,5 +1,10 @@
+using System.Text;
 using DotNetEnv;
 using GoogleIntegrationService.Infrastructure.Google;
+using GoogleIntegrationService.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using GoogleIntegrationService.Web.Extensions;
 
 Env.TraversePath().Load();
 
@@ -25,7 +30,14 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
 });
 
+
+
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddJwtAuthentication(builder.Configuration);
 var app = builder.Build();
+app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -34,8 +46,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseCors();
 
 app.MapControllers();
 
