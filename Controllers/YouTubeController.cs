@@ -1,6 +1,9 @@
+using System.Security.Claims;
 using GoogleIntegrationService.Application;
 using GoogleIntegrationService.Application.Requests;
+using GoogleIntegrationService.Services;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -8,10 +11,12 @@ using Microsoft.AspNetCore.Mvc;
 public class YouTubeController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IUserAccountService _userAccountService;
 
-    public YouTubeController(IMediator mediator)
+    public YouTubeController(IMediator mediator, IUserAccountService userAccountService)
     {
         _mediator = mediator;
+        _userAccountService = userAccountService;
     }
 
     /// <summary>
@@ -25,6 +30,27 @@ public class YouTubeController : ControllerBase
             return BadRequest("Token is required.");
 
         var groups = await _mediator.Send(new LikedVideosByChannelRequest(body.Token));
+        return Ok(groups);
+    }
+
+    /// <summary>
+    /// Same as POST /api/youtube/liked, but takes no body: requires the app's own JWT
+    /// (Authorization: Bearer ...), reads the Google id from it, looks up the Google
+    /// access token stored for that user in the database, and uses that instead.
+    /// </summary>
+    [Authorize]
+    [HttpGet("liked/me")]
+    public async Task<ActionResult<IReadOnlyList<ChannelLikesGroupDto>>> LikedForCurrentUser()
+    {
+        var googleId = User.FindFirstValue(ClaimTypes.Name);
+        if (string.IsNullOrWhiteSpace(googleId))
+            return Unauthorized("Token does not contain a Google id.");
+
+        var accessToken = await _userAccountService.GetGoogleTokenAsync(googleId);
+        if (string.IsNullOrWhiteSpace(accessToken))
+            return NotFound("No stored Google token for this user.");
+
+        var groups = await _mediator.Send(new LikedVideosByChannelRequest(accessToken));
         return Ok(groups);
     }
 

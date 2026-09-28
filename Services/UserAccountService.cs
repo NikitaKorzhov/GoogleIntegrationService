@@ -17,6 +17,9 @@ public interface IUserAccountService
         string? googleToken,
         string? googleRefreshToken,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Looks up the stored Google access token for a user by their Google id.</summary>
+    Task<string?> GetGoogleTokenAsync(string googleId, CancellationToken cancellationToken = default);
 }
 
 public class UserAccountService : IUserAccountService
@@ -75,6 +78,17 @@ public class UserAccountService : IUserAccountService
         }
 
         return user;
+    }
+
+    public Task<string?> GetGoogleTokenAsync(string googleId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(googleId))
+            throw new ArgumentException("Google id is required.", nameof(googleId));
+
+        return _db.AppUsers
+            .Where(u => u.UserName == googleId)
+            .Select(u => (string?)u.GoogleToken)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     private static bool IsUniqueConstraintViolation(DbUpdateException ex, string columnName) =>

@@ -236,6 +236,29 @@ Returns the user's liked videos **grouped by channel**, with each channel's shar
   results are sorted in descending order.
 - `400 Bad Request` if the token is missing.
 
+### `GET /api/youtube/liked/me`
+
+Same result as `POST /api/youtube/liked` above, but takes **no body**. Instead of a Google token
+supplied by the caller, it authenticates the request with the app's own JWT (from
+`/api/auth/google-callback`), reads the Google id out of it, and looks up the Google access token
+stored for that user in the database.
+
+**Headers:**
+```
+Authorization: Bearer <jwt>
+```
+
+**Response:** identical shape to `POST /api/youtube/liked`.
+
+- `401 Unauthorized` — missing/invalid JWT, or it has no Google id claim.
+- `404 Not Found` — no stored Google token for this user (never signed in via
+  `/api/auth/google-login`).
+
+> ⚠️ The stored access token is **not refreshed**. Google access tokens expire after ~1 hour, and
+> this endpoint doesn't yet use the stored refresh token to renew it — an expired token currently
+> surfaces as a `500` rather than a clean re-auth error. Sign in again via `/api/auth/google-login`
+> to get a fresh one.
+
 ### `POST /api/youtube/channel/{channelId}`
 
 Returns full information about a channel by its `id`.
