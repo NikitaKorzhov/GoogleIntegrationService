@@ -35,6 +35,7 @@ builder.Services.AddMediatR(cfg =>
 
 
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<IUserAccountService, UserAccountService>();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddGoogleAuthentication(builder.Configuration);
 var app = builder.Build();

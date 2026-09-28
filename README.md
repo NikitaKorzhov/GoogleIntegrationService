@@ -118,6 +118,45 @@ To get them:
 
 Then sign in by opening `https://localhost:7267/api/auth/google-login` in a browser.
 
+### Redirect configuration (returnUrl)
+
+There are **two different redirect URIs** involved in the login flow — don't confuse them:
+
+- **Google → this API** (`/signin-google`): configured in Google Cloud Console as described above.
+  Fixed, not related to `returnUrl`.
+- **This API → your frontend** (`returnUrl`): where the user lands *after* the backend has finished
+  the login and minted its own JWT. This one is controlled per-request by the caller and is
+  configured below.
+
+`GET /api/auth/google-login` accepts an optional `returnUrl` query parameter — an absolute URL of
+the frontend page to send the user back to once login completes, e.g.:
+```
+https://localhost:7267/api/auth/google-login?returnUrl=http://localhost:4200/checkout
+```
+`AuthController` carries it through the whole OAuth round trip and, once the JWT is issued,
+redirects to `{returnUrl}?token=<jwt>` (or `&token=<jwt>` if `returnUrl` already has a query
+string).
+
+To prevent an [Open Redirect](https://owasp.org/www-community/attacks/Unvalidated_Redirects_and_Forwards),
+`returnUrl` is only honored if its host is explicitly allow-listed. This is configured in
+`appsettings.json`:
+```json
+"Frontend": {
+  "DefaultReturnUrl": "http://localhost:4200/",
+  "AllowedReturnHosts": [ "localhost", "127.0.0.1" ]
+}
+```
+- `AllowedReturnHosts` — exact hostnames (no wildcards, no subdomain matching) the API is allowed
+  to redirect back to. Add your production frontend domain here before deploying, e.g.
+  `"myapp.com"`. `returnUrl` also must use `http`/`https` — any other scheme (e.g. `javascript:`)
+  is rejected outright.
+- `DefaultReturnUrl` — used whenever `returnUrl` is missing, malformed, or points at a host that
+  isn't allow-listed, so the redirect always lands somewhere safe instead of failing or leaking
+  the token to an untrusted host.
+
+Both are non-secret and safe to commit in `appsettings.json` (or override per environment with
+`appsettings.Production.json` / the `Frontend__AllowedReturnHosts__0` env-var style).
+
 ---
 
 ## Running
@@ -139,6 +178,34 @@ CORS is open for all origins (`AllowAnyOrigin`).
 ---
 
 ## Endpoints
+
+### `GET /api/auth/google-login`
+
+Starts the "Sign in with Google" flow. Redirects the browser to Google's consent screen.
+
+**Query params:**
+- `returnUrl` *(optional)* — absolute URL of the frontend page to return to after login. Must
+  point at a host listed in `Frontend:AllowedReturnHosts` (see
+  [Redirect configuration](#redirect-configuration-returnurl)); otherwise the default is used.
+
+**Example:**
+```
+GET https://localhost:7267/api/auth/google-login?returnUrl=http://localhost:4200/checkout
+```
+
+This is a **browser navigation**, not an API call meant to be `fetch`/`XMLHttpRequest`'d — link or
+redirect the user's browser to it directly so they can see Google's consent screen.
+
+### `GET /api/auth/google-callback`
+
+Google redirects here automatically after the user grants consent; you don't call this directly.
+The handler looks up/creates the `AppUser` (keyed by the Google id), issues the app's own JWT, and
+redirects the browser to:
+```
+{returnUrl}?token=<jwt>
+```
+(or `BadRequest` if Google authentication failed). The frontend should read `token` from its own
+URL's query string once it loads.
 
 ### `POST /api/youtube/liked`
 

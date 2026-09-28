@@ -16,8 +16,10 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<AppUser>(entity =>
         {
             entity.HasKey(u => u.Id);
+            // Email is nullable: Google doesn't always expose it, and a unique index treats
+            // multiple NULLs as distinct, so several emailless users can coexist.
             entity.HasIndex(u => u.Email).IsUnique();
-            entity.Property(u => u.Email).IsRequired();
+            entity.HasIndex(u => u.UserName).IsUnique();
             entity.Property(u => u.UserName).IsRequired();
             entity.Property(u => u.GoogleToken).IsRequired();
         });
